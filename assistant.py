@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor
+
+from setuptools import Command
+from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor
 import speech_recognition as sr
 from json import load, dump
 from typing import List
@@ -19,7 +21,8 @@ class Assistant:
             word_executor: WordExecutor,
             search_executor: GoogleSearchExecutor,
             telegram_executor: TelegramExecutor,
-            steam_executor: SteamExecutor
+            steam_executor: SteamExecutor,
+            gpt_executor: GPTExecutor
         ) -> None:
         self.engine = engine
         self.recognizer = recognizer
@@ -28,6 +31,7 @@ class Assistant:
         self.search_executor = search_executor
         self.telegram_executor = telegram_executor
         self.steam_executor = steam_executor
+        self.gpt_executor = gpt_executor
         self._load_scommands("supercommands.json")
     
         self.speaking = False
@@ -43,6 +47,7 @@ class Assistant:
             "загугли" : self._search, # done
             "найди": self._youtube_search, #done
             "напиши": self._telegram_write, #done
+            # "включи режим диалога": ...
         }
         pygame.init()
 
@@ -56,9 +61,10 @@ class Assistant:
             "supercommands" : self.scommands
         }
 
+
     def start(self):
+        self.speak("Слушаю")
         while True:
-            self.speak("Слушаю")
             command = self.listen()
             if "стоп" in command or "выход" in command or "отдыхай" in command:
                 self.speak("Ушел")
@@ -143,8 +149,7 @@ class Assistant:
             dump(self.scommands, file, separators=(",\n", ": "))
 
     def execute_command(self, command: str):
-        scommands = self._load_scommands("supercommands.json")
-        # if "мел" in command or "мяу" in command or "мем" in command:
+        self._load_scommands("supercommands.json")
         for keyword in self._keywords:
             if keyword in command:
                 self._keywords[keyword](command)
@@ -153,7 +158,8 @@ class Assistant:
             if scm.lower() in command:
                 self.use_scommand(scm)
                 return
-        self.speak("Я не знаю такой команды")
+        gpt_answer = self.gpt_executor.run(command)
+        self.speak(gpt_answer)
 
     def open_router(self, command: str):
         programs = self.system_executor.programs

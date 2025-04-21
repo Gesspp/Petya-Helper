@@ -3,6 +3,7 @@ from .word_executor import WordExecutor
 from .search_executor import GoogleSearchExecutor
 from .telegram_executor import TelegramExecutor
 from .steam_executor import SteamExecutor
+from .gpt_executor import GPTExecutor
 
 
 __all__ = [
@@ -10,5 +11,6 @@ __all__ = [
     "WordExecutor",
     "GoogleSearchExecutor",
     "TelegramExecutor",
-    "SteamExecutor"
+    "SteamExecutor",
+    "GPTExecutor"
 ]

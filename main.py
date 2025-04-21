@@ -1,25 +1,39 @@
 from assistant import Assistant
 from executors import *
+from executors.gpt_executor import GPTExecutor
 from mouse_keyboard_bot import MouseKeyboardBot
 from o_keyboard import Keyboard
 from sound_changer import SoundChanger
 import speech_recognition as sr
 import pyttsx3
 import eel, os
+from dotenv import load_dotenv
+from yandex_cloud_ml_sdk import YCloudML
 
 
 def start_assistant():
+    load_dotenv(override=True)
+
     bot = MouseKeyboardBot()
     kb = Keyboard()
+    folder_id = os.getenv("YANDEX_FOLDER_ID")
+    auth_token = os.getenv("YANDEX_AUTH_TOKEN")
+    if folder_id is None or auth_token is None:
+        raise Exception("YANDEX_FOLDER_ID or YANDEX_AUTH_TOKEN is not set")
+    y_cloud = YCloudML(
+        folder_id=folder_id,
+        auth=auth_token
+    )
     sound = SoundChanger(kb)
     sys_exec = SystemExecutor(bot, sound)
     word_exec = WordExecutor()
     srch_exec = GoogleSearchExecutor()
     tg_exec = TelegramExecutor(bot)
     steam_exec = SteamExecutor(bot)
+    gpt_exec = GPTExecutor(y_cloud)
     engine = pyttsx3.init()
     recognizer = sr.Recognizer()
-    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec)
+    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec, gpt_exec)
     return assistant
 
 

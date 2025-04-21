@@ -6,3 +6,4 @@ supercommands.json
 test.py
 test2.py
 output
+.env
