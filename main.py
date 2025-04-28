@@ -1,12 +1,16 @@
+import pyttsx3
+import torch
 from assistant import Assistant
 from executors import *
+from executors.dnd_executor import DNDExecutor
 from executors.gpt_executor import GPTExecutor
 from mouse_keyboard_bot import MouseKeyboardBot
 from o_keyboard import Keyboard
 from sound_changer import SoundChanger
 import speech_recognition as sr
-import pyttsx3
+import pyttsx4
 import eel, os
+from engines import SDEngine, PyttsxEngine
 from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 
@@ -31,9 +35,14 @@ def start_assistant():
     tg_exec = TelegramExecutor(bot)
     steam_exec = SteamExecutor(bot)
     gpt_exec = GPTExecutor(y_cloud)
-    engine = pyttsx3.init()
+    dnd_exec = DNDExecutor(y_cloud)
+    # default
+    eng = pyttsx3.init()
+    engine = PyttsxEngine(eng)
+    # new
+    # engine = SDEngine()
     recognizer = sr.Recognizer()
-    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec, gpt_exec)
+    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec, gpt_exec, dnd_exec)
     return assistant
 
 

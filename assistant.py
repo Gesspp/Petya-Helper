@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
 from setuptools import Command
-from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor
+from engines.iengine import EngineInterface
+from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, dnd_executor
 import speech_recognition as sr
 from json import load, dump
 from typing import List
-import pyttsx3
+import pyttsx4
 from errors import ProgramNotFoundError
 import pygame, os
 from utils import get_path
@@ -15,14 +16,15 @@ class Assistant:
 
     def __init__(
             self, 
-            engine: pyttsx3.Engine, 
+            engine: EngineInterface, 
             recognizer: sr.Recognizer,
             system_executor: SystemExecutor,
             word_executor: WordExecutor,
             search_executor: GoogleSearchExecutor,
             telegram_executor: TelegramExecutor,
             steam_executor: SteamExecutor,
-            gpt_executor: GPTExecutor
+            gpt_executor: GPTExecutor,
+            dnd_executor: DNDExecutor
         ) -> None:
         self.engine = engine
         self.recognizer = recognizer
@@ -32,10 +34,13 @@ class Assistant:
         self.telegram_executor = telegram_executor
         self.steam_executor = steam_executor
         self.gpt_executor = gpt_executor
+        self.dnd_executor = dnd_executor
         self._load_scommands("supercommands.json")
     
         self.speaking = False
         self.listening = False
+
+        self.is_dnd = False
 
         self._keywords = {
             "документ" : self._open_document, 
@@ -47,6 +52,7 @@ class Assistant:
             "загугли" : self._search, # done
             "найди": self._youtube_search, #done
             "напиши": self._telegram_write, #done
+            "давай поиграем": self.dnd_start
             # "включи режим диалога": ...
         }
         pygame.init()
@@ -74,8 +80,7 @@ class Assistant:
     def speak(self, text):
         if not self.speaking:
             self.speaking = True
-            self.engine.say(text)
-            self.engine.runAndWait()
+            self.engine.speak(text)
             self.speaking = False
 
     def listen(self):
@@ -101,14 +106,27 @@ class Assistant:
                 return ""
         return ""
     
+    def set_volume(self, volume: int):
+        self.engine.set_volume(volume)
+    
+    def dnd_next(self, command):
+        while self.is_dnd:
+            prompt = self.listen()
+            ans = self.dnd_executor.run(prompt)
+            self.speak(ans)
+            if prompt == "стоп":
+                self.is_dnd = False
+
+    def dnd_start(self, command):
+        self.speak(self.dnd_executor.start())
+        self.is_dnd = True
+        self.dnd_next(command)
+
     def _telegram_write(self, command: str):
         self.system_executor.execute("open", "telegram")
         getter = command.split()[-1]
         message = " ".join(command.split()[1:-1])
         self.telegram_executor.send_message_to(getter, message)
-
-    def set_volume(self, volume: int):
-        self.engine.setProperty("volume", volume)
 
     def delete_program(self, program_name: str):
         self.system_executor.remove_program(program_name)

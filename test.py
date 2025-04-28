@@ -1,11 +1,7 @@
-from mouse_keyboard_bot import MouseKeyboardBot
-from executors import TelegramExecutor
-from time import sleep
+import pyttsx4
+# only coqui_ai_tts engine support cloning voice.
+engine = pyttsx4.init('coqui_ai_tts')
+engine.setProperty('speaker_wav', './docs/i_have_a_dream_10s.wav')
 
-
-if __name__ == "__main__":
-    bot = MouseKeyboardBot()
-    executor = TelegramExecutor(bot)
-    # executor.find_chat("Александр Алексеевич Про")
-    # sleep(0.5)
-    executor.send_message_to("Александр Алексеевич Про", "Почему не работает русский")
+engine.say('this is an english text to voice test, listen it carefully and tell who i am.')
+engine.runAndWait()
