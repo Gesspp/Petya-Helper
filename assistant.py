@@ -10,7 +10,7 @@ import pyttsx4
 from errors import ProgramNotFoundError
 import pygame, os
 from utils import get_path
-
+import time
 
 class Assistant:
 
@@ -40,6 +40,7 @@ class Assistant:
         self.speaking = False
         self.listening = False
 
+        self.is_waiting = False
         self.is_dnd = False
 
         self._keywords = {
@@ -68,6 +69,20 @@ class Assistant:
         }
 
 
+    def wait_for_command(self):
+        while True:
+            phrase = self.listen()
+
+            if 'петя' in phrase.lower():
+                return
+            
+    def run(self):
+        while True:
+            # if self.is_waiting:
+                self.wait_for_command()
+                self.play_sound("./sounds/signal.wav")
+                self.start()
+
     def start(self):
         self.speak("Слушаю")
         while True:
@@ -83,27 +98,50 @@ class Assistant:
             self.engine.speak(text)
             self.speaking = False
 
+
     def listen(self):
         if not self.listening:
-            print("Слушаю")
+            print("Слушаю...")
             self.listening = True
-            self.play_sound("./sounds/signal.wav")
+
+            # Замер времени начала всей операции
+            start_total_time = time.time()
+            
+            # Этап 1: Настройка микрофона и запись аудио
+            start_record_time = time.time()
             with sr.Microphone() as source:
-                self.recognizer.adjust_for_ambient_noise(source)
-                audio = self.recognizer.listen(source)
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.5) #type: ignore
+                audio = self.recognizer.listen(
+                    source
+                )
+            end_record_time = time.time()
+            record_duration = end_record_time - start_record_time
+            print(f"🔊 Запись аудио: {record_duration:.2f} сек")
+
+            # Этап 2: Распознавание речи
+            start_recognition_time = time.time()
             try:
-                command = self.recognizer.recognize_google(audio, language="ru-RU") # type: ignore
+                command = self.recognizer.recognize_google(audio, language="ru-RU") #type: ignore
                 print(f"Вы сказали: {command}")
                 self.listening = False
-                return command.lower()
             except sr.UnknownValueError:
                 self.speak("Извините, я не понял.")
                 self.listening = False
-                return ""
+                command = ""
             except sr.RequestError:
                 self.speak("Ошибка подключения к сервису распознавания.")
                 self.listening = False
-                return ""
+                command = ""
+            end_recognition_time = time.time()
+            recognition_duration = end_recognition_time - start_recognition_time
+            print(f"🔍 Распознавание речи: {recognition_duration:.2f} сек")
+
+            # Общее время выполнения
+            end_total_time = time.time()
+            total_duration = end_total_time - start_total_time
+            print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
+
+            return command.lower() if command else ""
         return ""
     
     def set_volume(self, volume: int):

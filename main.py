@@ -56,7 +56,7 @@ def open_settings():
 
 @eel.expose
 def run_assistant():
-    assist.start()
+    assist.run()
 
 
 @eel.expose
