@@ -12,6 +12,8 @@ class GPTExecutor:
         ]
 
     def run(self, prompt: str) -> str:
+        if len(prompt.strip()) == 0:
+            return ""
         self._messages += [
             {
                 "role": "user",

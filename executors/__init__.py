@@ -5,6 +5,8 @@ from .telegram_executor import TelegramExecutor
 from .steam_executor import SteamExecutor
 from .gpt_executor import GPTExecutor
 from .dnd_executor import DNDExecutor
+from .tile_manager_executor import TileManager
+from .code_writer_executor import CodeWriterExecutor
 
 
 __all__ = [
@@ -14,5 +16,7 @@ __all__ = [
     "TelegramExecutor",
     "SteamExecutor",
     "GPTExecutor",
-    "DNDExecutor"
+    "DNDExecutor",
+    "TileManager",
+    "CodeWriterExecutor"
 ]

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from setuptools import Command
 from engines.iengine import EngineInterface
-from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, dnd_executor
+from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, TileManager, CodeWriterExecutor
 import speech_recognition as sr
 from json import load, dump
 from typing import List
@@ -11,6 +11,7 @@ from errors import ProgramNotFoundError
 import pygame, os
 from utils import get_path
 import time
+import re
 
 class Assistant:
 
@@ -24,7 +25,9 @@ class Assistant:
             telegram_executor: TelegramExecutor,
             steam_executor: SteamExecutor,
             gpt_executor: GPTExecutor,
-            dnd_executor: DNDExecutor
+            dnd_executor: DNDExecutor,
+            tile_exec: TileManager,
+            code_exec: CodeWriterExecutor
         ) -> None:
         self.engine = engine
         self.recognizer = recognizer
@@ -35,6 +38,8 @@ class Assistant:
         self.steam_executor = steam_executor
         self.gpt_executor = gpt_executor
         self.dnd_executor = dnd_executor
+        self.tile_exec = tile_exec
+        self.code_exec = code_exec
         self._load_scommands("supercommands.json")
     
         self.speaking = False
@@ -52,8 +57,10 @@ class Assistant:
             "громкость" : self._set_volume, # done
             "загугли" : self._search, # done
             "найди": self._youtube_search, #done
-            "напиши": self._telegram_write, #done
-            "давай поиграем": self.dnd_start
+            "напиши в тг": self._telegram_write, #done
+            "давай поиграем": self.dnd_start,
+            "поставь": self.TileMangerRatio,
+            "напиши код": self.code_write
             # "включи режим диалога": ...
         }
         pygame.init()
@@ -134,12 +141,12 @@ class Assistant:
                 command = ""
             end_recognition_time = time.time()
             recognition_duration = end_recognition_time - start_recognition_time
-            print(f"🔍 Распознавание речи: {recognition_duration:.2f} сек")
+            # print(f"🔍 Распознавание речи: {recognition_duration:.2f} сек")
 
             # Общее время выполнения
             end_total_time = time.time()
             total_duration = end_total_time - start_total_time
-            print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
+            # print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
 
             return command.lower() if command else ""
         return ""
@@ -160,6 +167,19 @@ class Assistant:
         self.is_dnd = True
         self.dnd_next(command)
 
+    def code_write(self, command):
+        print("code_write", command)
+        file_path = ""
+        if "тут" in command:
+            self.code_exec.write_code_in_place(command)
+            return
+        elif "файл" in command:
+            prompt = " ".join(command.split()[:-3])
+            idx = command.find("файл")
+            file_path = command[idx + 5:]
+            self.code_exec.write_code(prompt, file_path)
+        self.speak("Код записан")
+
     def _telegram_write(self, command: str):
         self.system_executor.execute("open", "telegram")
         getter = command.split()[-1]
@@ -171,6 +191,22 @@ class Assistant:
 
     def delete_site(self, site_name: str):
         self.search_executor.remove_site(site_name)
+
+    def get_ratio(self, command):
+        ratios = list(map(int, re.findall(r'\d+', command)))
+        return ratios
+            
+    def TileMangerRatio(self, command):
+        ratio = self.get_ratio(command)
+        print(ratio)
+
+        command_words = command.split(" ")
+        prg1, prg2 = command_words[1], command_words[3]
+        self.system_executor.execute("open", prg1)
+        self.system_executor.execute("open", prg2)
+        print(prg1, prg2)
+
+        self.tile_exec.tile_windows(prg1, prg2, ratio)
 
     def delete_scommand(self, scommand_name: str):
         self._load_scommands("supercommands.json")
@@ -206,6 +242,7 @@ class Assistant:
 
     def execute_command(self, command: str):
         self._load_scommands("supercommands.json")
+        print("execute_command", command)
         for keyword in self._keywords:
             if keyword in command:
                 self._keywords[keyword](command)

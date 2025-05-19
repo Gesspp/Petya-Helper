@@ -23,7 +23,8 @@ class SystemExecutor:
             "change_volume" : self._change_volume,
             "set_volume" : self._set_volume,
             "create_folder" : self._create_folder,
-            "shutdown" : self._shutdown
+            "shutdown" : self._shutdown,
+            "create_file" : self._create_file
         }
         self._load_programs(config_file)
 
@@ -99,6 +100,12 @@ class SystemExecutor:
     def _create_folder(self, folder_name):
         path = (Path.home() / "Desktop" / folder_name)
         path.mkdir()
+
+    def _create_file(self, file_name, file_path, file_type):
+        path = (f'./{file_path}/{file_name}.{file_type}')
+        with open(path, "w", encoding="utf-8") as file:
+            file.write("")
+        
 
     def _shutdown(self):
         os.system("shutdown now")
