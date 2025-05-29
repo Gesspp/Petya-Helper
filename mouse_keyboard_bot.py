@@ -39,6 +39,9 @@ class MouseKeyboardBot:
             coords.append(location)
             location = pyscreeze.locateOnScreen(image, confidence=0.8)
         return coords
+    
+    def press(self, key):
+        keyboard.press_and_release(key)
 
 
 # mb = MouseKeyboardBot()

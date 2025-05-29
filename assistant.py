@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from setuptools import Command
 from engines.iengine import EngineInterface
-from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, TileManager, CodeWriterExecutor
+from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, TileManager, CodeWriterExecutor, PPExecutor
 import speech_recognition as sr
 from json import load, dump
 from typing import List
@@ -27,7 +27,8 @@ class Assistant:
             gpt_executor: GPTExecutor,
             dnd_executor: DNDExecutor,
             tile_exec: TileManager,
-            code_exec: CodeWriterExecutor
+            code_exec: CodeWriterExecutor,
+            pp_exec: PPExecutor
         ) -> None:
         self.engine = engine
         self.recognizer = recognizer
@@ -40,6 +41,7 @@ class Assistant:
         self.dnd_executor = dnd_executor
         self.tile_exec = tile_exec
         self.code_exec = code_exec
+        self.pp_exec = pp_exec
         self._load_scommands("supercommands.json")
     
         self.speaking = False
@@ -60,7 +62,9 @@ class Assistant:
             "напиши в тг": self._telegram_write, #done
             "давай поиграем": self.dnd_start,
             "поставь": self.TileMangerRatio,
-            "напиши код": self.code_write
+            "напиши код": self.code_write,
+            "следующий": self.next_s,
+            "предыдущий": self.prev_s
             # "включи режим диалога": ...
         }
         pygame.init()
@@ -191,6 +195,12 @@ class Assistant:
 
     def delete_site(self, site_name: str):
         self.search_executor.remove_site(site_name)
+
+    def next_s(self, command):
+        self.pp_exec.next()
+
+    def prev_s(self, command):
+        self.pp_exec.prev()
 
     def get_ratio(self, command):
         ratios = list(map(int, re.findall(r'\d+', command)))

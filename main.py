@@ -1,3 +1,4 @@
+from pprint import pp
 import pyttsx3
 import torch
 from assistant import Assistant
@@ -6,6 +7,7 @@ from executors.dnd_executor import DNDExecutor
 from executors.gpt_executor import GPTExecutor
 from executors.tile_manager_executor import TileManager
 from executors.code_writer_executor import CodeWriterExecutor
+from executors.pp_executor import PPExecutor
 from mouse_keyboard_bot import MouseKeyboardBot
 from o_keyboard import Keyboard
 from sound_changer import SoundChanger
@@ -40,13 +42,14 @@ def start_assistant():
     dnd_exec = DNDExecutor(y_cloud)
     tile_exec = TileManager()
     code_exec = CodeWriterExecutor(y_cloud, bot)
+    pp_exec = PPExecutor(bot)
     # default
     eng = pyttsx3.init()
     engine = PyttsxEngine(eng)
     # new
     # engine = SDEngine()
     recognizer = sr.Recognizer()
-    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec, gpt_exec, dnd_exec, tile_exec, code_exec)
+    assistant = Assistant(engine, recognizer, sys_exec, word_exec, srch_exec, tg_exec, steam_exec, gpt_exec, dnd_exec, tile_exec, code_exec, pp_exec)
     return assistant
 
 
