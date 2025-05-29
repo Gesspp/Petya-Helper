@@ -82,23 +82,34 @@ class Assistant:
 
     def wait_for_command(self):
         while True:
-            phrase = self.listen()
+            phrase = self.listen().lower()
+            if "петя" in phrase:
+                command = phrase[phrase.find("петя")+4:].strip()
+                return command  # вернем оставшуюся часть без "петя"
 
-            if 'петя' in phrase.lower():
-                return
-            
     def run(self):
         while True:
-            # if self.is_waiting:
-                self.wait_for_command()
-                self.play_sound("./sounds/signal.wav")
-                self.start()
+            command = self.wait_for_command()
+            self.play_sound("./sounds/signal.wav")
+            self.start(command)
 
-    def start(self):
+    def start(self, initial_command=None):
         self.speak("Слушаю")
+        
+        # Выполнить начальную команду, если есть
+        if initial_command:
+            if any(word in initial_command for word in ["стоп", "выход", "отдыхай"]):
+                self.speak("Ушел")
+                return
+            self.execute_command(initial_command)
+
         while True:
             command = self.listen()
-            if "стоп" in command or "выход" in command or "отдыхай" in command:
+            if not command.startswith("петя"):
+                continue  # игнорировать всё, что не начинается с "петя"
+
+            command = command.replace("петя", "", 1).strip()
+            if any(word in command for word in ["стоп", "выход", "отдыхай"]):
                 self.speak("Ушел")
                 return
             self.execute_command(command)
