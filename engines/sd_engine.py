@@ -33,3 +33,9 @@ class SDEngine(EngineInterface):
 
     def set_volume(self, volume: int):
         sd.default.device[1].volume = volume # type: ignore
+
+    def stop(self):
+        sd.stop()
+
+    def wait(self):
+        sd.wait()

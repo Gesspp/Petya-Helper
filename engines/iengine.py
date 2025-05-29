@@ -9,3 +9,11 @@ class EngineInterface(ABC):
     @abstractmethod
     def set_volume(self, volume: int):
         ...
+
+    @abstractmethod
+    def stop(self):
+        ...
+
+    @abstractmethod
+    def wait(self):
+        ...

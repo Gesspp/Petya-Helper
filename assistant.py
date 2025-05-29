@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-
+import threading
 from setuptools import Command
 from engines.iengine import EngineInterface
 from executors import SystemExecutor, WordExecutor, GoogleSearchExecutor, TelegramExecutor, SteamExecutor, GPTExecutor, DNDExecutor, TileManager, CodeWriterExecutor
@@ -42,11 +41,16 @@ class Assistant:
         self.code_exec = code_exec
         self._load_scommands("supercommands.json")
     
+        self.speaking_thread = None
+        self.is_running = False
+        self._lock = threading.Lock()
+
         self.speaking = False
         self.listening = False
 
         self.is_waiting = False
         self.is_dnd = False
+        self.working = False
 
         self._keywords = {
             "документ" : self._open_document, 
@@ -79,9 +83,11 @@ class Assistant:
     def wait_for_command(self):
         while True:
             phrase = self.listen()
-
+            
             if 'петя' in phrase.lower():
+                self.is_waiting = True
                 return
+            
             
     def run(self):
         while True:
@@ -92,19 +98,41 @@ class Assistant:
 
     def start(self):
         self.speak("Слушаю")
-        while True:
+        self.working = True
+        while self.working:
             command = self.listen()
-            if "стоп" in command or "выход" in command or "отдыхай" in command:
+            if not command:
+                continue
+            if any(word in command for word in ("стоп", "выход", "отдыхай")):
                 self.speak("Ушел")
+                self.working = False
                 return
             self.execute_command(command)
+        print("Я вышел", self.working, self.is_running)
+
+        
+    def stop(self):
+        self.working = False
+        self.stop_speaking()
 
     def speak(self, text):
-        if not self.speaking:
-            self.speaking = True
-            self.engine.speak(text)
-            self.speaking = False
+        def _speak():
+            with self._lock:
+                print("Начинаю говорить:", text)
+                self.engine.speak(text)
+                self.engine.wait()
+                print("Закончил говорить")
+        
+        self.stop_speaking()  # <- теперь не блокирует
+        self.speaking_thread = threading.Thread(target=_speak)
+        self.speaking_thread.start()
 
+    def stop_speaking(self):
+        print("stop_speaking called")
+        if self.speaking_thread:
+            print("speaking_thread is_alive:", self.speaking_thread.is_alive())
+        self.engine.stop()
+        print("engine.stop() called")
 
     def listen(self):
         if not self.listening:
@@ -141,12 +169,12 @@ class Assistant:
                 command = ""
             end_recognition_time = time.time()
             recognition_duration = end_recognition_time - start_recognition_time
-            # print(f"🔍 Распознавание речи: {recognition_duration:.2f} сек")
+            print(f"🔍 Распознавание речи: {recognition_duration:.2f} сек")
 
             # Общее время выполнения
             end_total_time = time.time()
             total_duration = end_total_time - start_total_time
-            # print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
+            print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
 
             return command.lower() if command else ""
         return ""
@@ -252,6 +280,7 @@ class Assistant:
                 self.use_scommand(scm)
                 return
         gpt_answer = self.gpt_executor.run(command)
+        print("gpt_answer", gpt_answer)
         self.speak(gpt_answer)
 
     def open_router(self, command: str):

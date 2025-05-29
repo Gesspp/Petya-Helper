@@ -62,6 +62,9 @@ def open_settings():
 def run_assistant():
     assist.run()
 
+@eel.expose
+def stop_assistant():
+    assist.stop()
 
 @eel.expose
 def get_status():
@@ -118,4 +121,9 @@ def check_empty_settings():
     return assist.check_empty_settings()
 
 if __name__ == "__main__":
-    eel.start("index.html", size=(800, 600))
+    from time import sleep
+    # assist.speak("Это долгая речь для проверки клиента. Пожалуйста, подождите.")
+    # sleep(1)
+    # assist.speak("Ха ха")
+    # eel.start("index.html", size=(800, 600))
+    assist.run()

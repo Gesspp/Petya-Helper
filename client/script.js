@@ -1,5 +1,16 @@
+let isAssistantRunning = false;
+
 const btn = document.querySelector('.button');
-btn.addEventListener('click', () => eel.run_assistant());
+btn.addEventListener('click', () => {
+    isAssistantRunning = !isAssistantRunning;
+    if(isAssistantRunning){
+        btn.classList.add('active');
+        eel.run_assistant();
+    } else {
+        btn.classList.remove('active');
+        eel.stop_assistant();
+    }
+});
 
 const main = document.querySelector('main');
 const settings = document.querySelector('.settings');
