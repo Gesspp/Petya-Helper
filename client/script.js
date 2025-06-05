@@ -31,7 +31,20 @@ let old_program_name = '';
 let old_site_name = '';
 let old_scommand_name = '';
 
+const open_folder_icon = document.querySelector('.open-folder-icon');
+const openFile = document.querySelector('#file_input');
 
+open_folder_icon.addEventListener('click', async () => {
+    openFile.click();
+})
+
+openFile.addEventListener('change', () => {
+    if(openFile.files.length > 0){
+        console.log(openFile.files[0])
+        document.querySelector(".new-program-path").value = openFile.files[0].path || openFile.files[0].name
+    }
+    
+})
 
 async function get_settings() {
     let settings = await eel.get_settings()();
