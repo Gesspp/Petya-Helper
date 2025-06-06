@@ -1,3 +1,4 @@
+from encodings.punycode import T
 import pyttsx3
 from assistant import Assistant
 from executors import *
@@ -14,7 +15,7 @@ import eel, os
 from engines import SDEngine, PyttsxEngine
 from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
-from tkinter import Tk, filedialog
+from threading import Thread
 
 
 def start_assistant():
@@ -63,6 +64,9 @@ def open_settings():
 def run_assistant():
     assist.run()
 
+@eel.expose
+def stop_assistant():
+    os._exit(0)
 
 @eel.expose
 def get_status():

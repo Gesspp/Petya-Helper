@@ -1,5 +1,21 @@
 const btn = document.querySelector('.button');
-btn.addEventListener('click', () => eel.run_assistant());
+
+window.onbeforeunload = function (e) {
+    e.preventDefault();
+    eel.minimize_window();
+    return false
+}
+
+let is_running = false;
+btn.addEventListener('click', () => {
+    if (is_running) {
+        eel.stop_assistant()
+        is_running = false;
+        return;
+    }
+    is_running = true;
+    eel.run_assistant();
+});
 
 const main = document.querySelector('main');
 const settings = document.querySelector('.settings');

@@ -12,3 +12,6 @@ class PyttsxEngine(EngineInterface):
 
     def set_volume(self, volume: int):
         self.engine.setProperty("volume", volume)
+
+    def stop(self):
+        self.engine.stop()

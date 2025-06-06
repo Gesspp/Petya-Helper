@@ -81,6 +81,7 @@ class Assistant:
 
 
     def wait_for_command(self):
+        print("wait for command")
         while True:
             phrase = self.listen().lower()
             if "петя" in phrase:
@@ -88,12 +89,14 @@ class Assistant:
                 return command  # вернем оставшуюся часть без "петя"
 
     def run(self):
+        print("run")
         while True:
             command = self.wait_for_command()
             self.play_sound("./sounds/signal.wav")
             self.start(command)
 
     def start(self, initial_command=None):
+        print("start")
         self.speak("Слушаю")
         
         # Выполнить начальную команду, если есть
@@ -115,6 +118,7 @@ class Assistant:
             self.execute_command(command)
 
     def speak(self, text):
+        print("speak")
         if not self.speaking:
             self.speaking = True
             self.engine.speak(text)
@@ -122,6 +126,7 @@ class Assistant:
 
 
     def listen(self):
+        print("listen")
         if not self.listening:
             print("Слушаю...")
             self.listening = True
