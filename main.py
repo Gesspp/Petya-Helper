@@ -1,4 +1,3 @@
-from encodings.punycode import T
 import pyttsx3
 from assistant import Assistant
 from executors import *
@@ -12,10 +11,14 @@ from o_keyboard import Keyboard
 from sound_changer import SoundChanger
 import speech_recognition as sr
 import eel, os
-from engines import SDEngine, PyttsxEngine
+from engines import PyttsxEngine
 from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
-from threading import Thread
+import pystray, threading
+from PIL import Image
+
+
+
 
 
 def start_assistant():
@@ -54,6 +57,44 @@ def start_assistant():
 
 eel.init("client")
 assist = start_assistant()
+
+
+icon = None  # глобальная переменная для иконки
+
+def show_window():
+    """Запускаем окно (если закрыли до этого)"""
+    global icon
+    try:
+        if icon:
+            icon.stop()
+            icon = None
+        eel.start("index.html", size=(800, 600), close_callback=on_close_window)
+    except Exception as e:
+        print(e)
+
+def on_close_window(page, sockets):
+    """Когда закрыли окно — запускаем трей"""
+    threading.Thread(target=create_tray_icon, daemon=True).start()
+    return False  # не закрываем полностью, просто скрываем
+
+def create_tray_icon():
+    """Создаем иконку в трее"""
+    global icon
+    if icon:
+        return  # уже есть
+    image = Image.open("images/icon.png")
+    menu = pystray.Menu(
+        pystray.MenuItem("Открыть", lambda: show_window()),
+        pystray.MenuItem("Выход", lambda: exit_app())
+    )
+    icon = pystray.Icon("app_icon", image, "Ассистент", menu)
+    icon.run()
+
+def exit_app():
+    """Выход из приложения"""
+    if icon:
+        icon.stop()
+    os._exit(0)
 
 @eel.expose
 def open_settings():
@@ -123,4 +164,5 @@ def check_empty_settings():
     return assist.check_empty_settings()
 
 if __name__ == "__main__":
-    eel.start("index.html", size=(800, 600))
+    # eel.start("index.html", size=(800, 600), close_callback=on_close_window, port=0)
+    show_window()

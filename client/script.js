@@ -1,10 +1,16 @@
 const btn = document.querySelector('.button');
 
-window.onbeforeunload = function (e) {
-    e.preventDefault();
-    eel.minimize_window();
-    return false
+eel.expose(show_window);
+function show_window() {
+    window.moveTo(100, 100);
+    window.focus();
 }
+
+
+// window.onbeforeunload = function (e) {
+//     eel.minimize_to_tray();  // Вызываем Python-функцию
+//     return false;
+// }
 
 let is_running = false;
 btn.addEventListener('click', () => {
