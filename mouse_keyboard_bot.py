@@ -43,6 +43,9 @@ class MouseKeyboardBot:
     def press(self, key):
         keyboard.press_and_release(key)
 
+    def screenshot(self):
+        keyboard.press("printscreen")
+
 
 # mb = MouseKeyboardBot()
 # sleep(4)

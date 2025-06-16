@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from yandex_cloud_ml_sdk import YCloudML
 import pystray, threading
 from PIL import Image
+import pyaudio
 
 
 
@@ -96,10 +97,37 @@ def exit_app():
         icon.stop()
     os._exit(0)
 
-@eel.expose
-def open_settings():
-    eel.start("settings.html", size=(800, 600))
 
+def get_device_list():
+    audio = pyaudio.PyAudio()
+    devices = []
+
+    for i in range(audio.get_device_count()):
+        info = audio.get_device_info_by_index(i)
+        name = info.get('name')
+        try:
+            # Попытка починить имя устройства
+            fixed_name = name.encode('cp1251').decode('utf-8') # type: ignore
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            fixed_name = name  # Если не получилось — оставляем как есть
+
+        devices.append({
+            "index": i,
+            "name": fixed_name
+        })
+
+    audio.terminate()
+    return devices
+
+
+@eel.expose
+def get_microphone_list():
+    return get_device_list()
+
+@eel.expose
+def set_microphone(mic_index: int):
+    if mic_index >= 0 and mic_index < len(sr.Microphone.list_microphone_names()):
+        assist.set_microphone_index(mic_index)
 
 @eel.expose
 def run_assistant():

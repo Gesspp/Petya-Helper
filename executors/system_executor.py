@@ -105,6 +105,9 @@ class SystemExecutor:
         path = (f'./{file_path}/{file_name}.{file_type}')
         with open(path, "w", encoding="utf-8") as file:
             file.write("")
+
+    def make_screenshot(self):
+        self.bot.screenshot()
         
 
     def _shutdown(self):

@@ -1,4 +1,6 @@
 const btn = document.querySelector('.button');
+const microphones_el = document.querySelector('#microphones');
+
 
 eel.expose(show_window);
 function show_window() {
@@ -6,6 +8,20 @@ function show_window() {
     window.focus();
 }
 
+let microphones;
+eel.get_microphone_list()().then((result) => {
+    microphones = result
+    for (let i = 0; i < microphones.length; i++) {
+        const option = document.createElement('option');
+        option.value = microphones[i].index;
+        option.textContent = microphones[i].name;
+        microphones_el.appendChild(option);
+    }
+
+    microphones_el.addEventListener('change', () => {
+        eel.set_microphone(Number(microphones_el.value))();
+    })
+})
 
 // window.onbeforeunload = function (e) {
 //     eel.minimize_to_tray();  // Вызываем Python-функцию

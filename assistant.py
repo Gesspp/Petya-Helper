@@ -28,7 +28,9 @@ class Assistant:
             dnd_executor: DNDExecutor,
             tile_exec: TileManager,
             code_exec: CodeWriterExecutor,
-            pp_exec: PPExecutor
+            pp_exec: PPExecutor,
+
+            microphone_index: int = 11
         ) -> None:
         self.engine = engine
         self.recognizer = recognizer
@@ -42,6 +44,9 @@ class Assistant:
         self.tile_exec = tile_exec
         self.code_exec = code_exec
         self.pp_exec = pp_exec
+
+        self.microphone_index = microphone_index
+
         self._load_scommands("supercommands.json")
     
         self.speaking = False
@@ -58,13 +63,14 @@ class Assistant:
             "создай папку": self._create_folder, # done
             "громкость" : self._set_volume, # done
             "загугли" : self._search, # done
-            "найди": self._youtube_search, #done
+            "найди": self._youtube_search,
             "напиши в тг": self._telegram_write, #done
             "давай поиграем": self.dnd_start,
             "поставь": self.TileMangerRatio,
             "напиши код": self.code_write,
             "следующий": self.next_s,
-            "предыдущий": self.prev_s
+            "предыдущий": self.prev_s,
+            "скрин": self.screenshot
             # "включи режим диалога": ...
         }
         pygame.init()
@@ -108,10 +114,10 @@ class Assistant:
 
         while True:
             command = self.listen()
-            if not command.startswith("петя"):
-                continue  # игнорировать всё, что не начинается с "петя"
+            if "пятя" not in command:
+                continue
 
-            command = command.replace("петя", "", 1).strip()
+            command = command[command.find("петя")+4:].strip()
             if any(word in command for word in ["стоп", "выход", "отдыхай"]):
                 self.speak("Ушел")
                 return
@@ -136,7 +142,9 @@ class Assistant:
             
             # Этап 1: Настройка микрофона и запись аудио
             start_record_time = time.time()
-            with sr.Microphone() as source:
+            mic = sr.Microphone(device_index=self.microphone_index)
+            
+            with mic as source:
                 self.recognizer.adjust_for_ambient_noise(source, duration=0.5) #type: ignore
                 audio = self.recognizer.listen(
                     source
@@ -167,10 +175,17 @@ class Assistant:
             end_total_time = time.time()
             total_duration = end_total_time - start_total_time
             # print(f"⏱ Общее время выполнения: {total_duration:.2f} сек")
+            if command:
+                command = command.lower()
 
             return command.lower() if command else ""
         return ""
     
+    def set_microphone_index(self, index: int):
+        self.microphone_index = index
+        print(f"Микрофон установлен на индекс {index}")
+        print("Название микрофона:", sr.Microphone.list_microphone_names()[index])
+
     def set_volume(self, volume: int):
         self.engine.set_volume(volume)
     
@@ -209,6 +224,9 @@ class Assistant:
     def delete_program(self, program_name: str):
         self.system_executor.remove_program(program_name)
 
+    def screenshot(self, command):
+        self.system_executor.execute("screenshot")
+
     def delete_site(self, site_name: str):
         self.search_executor.remove_site(site_name)
 
@@ -217,6 +235,7 @@ class Assistant:
 
     def prev_s(self, command):
         self.pp_exec.prev()
+        print('done')
 
     def get_ratio(self, command):
         ratios = list(map(int, re.findall(r'\d+', command)))
